@@ -133,8 +133,16 @@ function gridDiskDistances(origin, k, out, distances)
     ccall((:gridDiskDistances, libh3), H3Error, (H3Index, Cint, Ptr{H3Index}, Ptr{Cint}), origin, k, out, distances)
 end
 
+function maxGridRingSize(k, out)
+    ccall((:maxGridRingSize, libh3), H3Error, (Cint, Ptr{Int64}), k, out)
+end
+
 function gridRingUnsafe(origin, k, out)
     ccall((:gridRingUnsafe, libh3), H3Error, (H3Index, Cint, Ptr{H3Index}), origin, k, out)
+end
+
+function gridRing(origin, k, out)
+    ccall((:gridRing, libh3), H3Error, (H3Index, Cint, Ptr{H3Index}), origin, k, out)
 end
 
 function maxPolygonToCellsSize(geoPolygon, res, flags, out)
@@ -433,6 +441,10 @@ end
 
 function _gridDiskDistancesInternal(origin, k, out, distances, maxIdx, curK)
     ccall((:_gridDiskDistancesInternal, libh3), H3Error, (H3Index, Cint, Ptr{H3Index}, Ptr{Cint}, Int64, Cint), origin, k, out, distances, maxIdx, curK)
+end
+
+function _gridRingInternal(origin, k, out)
+    ccall((:_gridRingInternal, libh3), H3Error, (H3Index, Cint, Ptr{H3Index}), origin, k, out)
 end
 
 struct CoordIJK
@@ -1085,9 +1097,9 @@ const H3_NULL = 0
 
 const H3_VERSION_MAJOR = 4
 
-const H3_VERSION_MINOR = 2
+const H3_VERSION_MINOR = 3
 
-const H3_VERSION_PATCH = 1
+const H3_VERSION_PATCH = 0
 
 const MAX_CELL_BNDRY_VERTS = 10
 
