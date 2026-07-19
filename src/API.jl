@@ -718,11 +718,8 @@ Provides the vertexes for `cell`.
 @param cell H3Index of cell to get vertexes of
 """
 function cellToVertexes(cell::H3Index)::Vector{H3Index}
-
-    num_vertexes = getNumVertexes(cell)
-
-    vertex_indexes = Vector{H3Index}(undef,num_vertexes)
-    Lib.cellToVertexes(cell,vertex_indexes)
+    vertex_indexes = Vector{H3Index}(undef, Lib.NUM_HEX_VERTS)
+    Lib.cellToVertexes(cell, vertex_indexes)
     return vertex_indexes
 end
 
