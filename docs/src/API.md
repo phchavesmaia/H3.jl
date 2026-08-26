@@ -5,6 +5,15 @@
     - [https://h3geo.org/docs/](https://h3geo.org/docs/)
     - [https://github.com/uber/h3/blob/master/src/h3lib/include/h3api.h.in](https://github.com/uber/h3/blob/master/src/h3lib/include/h3api.h.in)
 
+```@contents
+Pages = ["API.md"]
+Depth = 2:2
+```
+
+```@index
+Pages = ["API.md"]
+```
+
 # Error handling
 ```@docs
 H3ErrorCode
