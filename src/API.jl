@@ -18,6 +18,9 @@ export gridDisk, maxGridDiskSize, gridDiskDistances, gridDiskUnsafe, gridDiskDis
 # Hierarchical grid functions
 export cellToParent, cellToChildren, cellToChildrenSize, compactCells, uncompactCells, uncompactCellsSize
 
+# Region functions
+export maxPolygonToCellsSize, polygonToCells, maxPolygonToCellsSizeExperimental, polygonToCellsExperimental
+
 # Unidirectional edge functions
 export areNeighborCells, cellsToDirectedEdge, isValidDirectedEdge, getDirectedEdgeOrigin, getDirectedEdgeDestination, directedEdgeToCells, originToDirectedEdges, directedEdgeToBoundary
 
@@ -561,6 +564,102 @@ function uncompactCellsSize(compactedSet::Vector{H3Index}, res::Int)::Union{H3Er
     _check_h3error(ret, refout[])
 end
 
+# Region functions
+
+"""
+	maxPolygonToCellsSize(polygon::Lib.GeoPolygon, res::Int)::Union{H3ErrorCode, Int64}
+
+Returns the maximum number of H3 cells that could be returned by
+`polygonToCells` for the given polygon and resolution.
+
+@param polygon The polygon to estimate the number of cells for.
+@param res The H3 resolution of the output cells.
+@return The maximum number of cells, or an `H3ErrorCode` on failure.
+"""
+function maxPolygonToCellsSize(polygon::Lib.GeoPolygon, res::Int)::Union{H3ErrorCode, Int64}
+	flags = UInt32(0)
+	out = Ref{Int64}()
+	ret::H3Error = Lib.maxPolygonToCellsSize(Ref(polygon), res, flags, out)
+	_check_h3error(ret, out[])
+end
+
+"""
+	polygonToCells(polygon::Lib.GeoPolygon, res::Int)::Union{H3ErrorCode, Vector{H3Index}}
+
+Returns the H3 cells whose centers are contained in the given polygon.
+
+@param polygon The polygon to fill with H3 cells.
+@param res The H3 resolution of the output cells.
+@return The H3 indexes contained by the polygon, or an `H3ErrorCode` on failure.
+"""
+function polygonToCells(polygon::Lib.GeoPolygon, res::Int)::Union{H3ErrorCode, Vector{H3Index}}
+	array_len = maxPolygonToCellsSize(polygon, res)
+	out = fill(H3Index(H3_NULL), array_len)
+	flags = UInt32(0)
+	ret::H3Error = Lib.polygonToCells(Ref(polygon), res, flags, out)
+	_check_h3error(ret, filter(!=(H3_NULL), out))
+end
+
+function polygonToCells(geoloop::Vector{LatLng}, res::Int)::Union{H3ErrorCode, Vector{H3Index}}
+	GC.@preserve geoloop begin
+		loop = Lib.GeoLoop(length(geoloop), pointer(geoloop))
+		polygon = Lib.GeoPolygon(loop, 0, C_NULL)
+		polygonToCells(polygon, res)
+	end
+end
+
+"""
+	maxPolygonToCellsSizeExperimental(polygon::Lib.GeoPolygon, res::Int, flags::UInt32)::Union{H3ErrorCode, Int64}
+
+Returns the maximum number of H3 cells that could be returned by
+`polygonToCellsExperimental` for the given polygon and resolution.
+
+@param polygon The polygon to estimate the number of cells for.
+@param res The H3 resolution of the output cells.
+@param flags Experimental flags to modify the behavior of the function.
+@return The maximum number of cells, or an `H3ErrorCode` on failure.
+"""
+function maxPolygonToCellsSizeExperimental(polygon::Lib.GeoPolygon, res::Int, flags::UInt32)::Union{H3ErrorCode, Int64}
+	out = Ref{Int64}()
+	ret::H3Error =
+		Lib.maxPolygonToCellsSizeExperimental(Ref(polygon), res, flags, out)
+	_check_h3error(ret, out[])
+end
+
+"""
+	polygonToCellsExperimental(polygon::Lib.GeoPolygon, res::Int, flags::UInt32)::Union{H3ErrorCode, Vector{H3Index}}
+
+Returns the H3 cells whose that fulfill a spatial predicate with 
+respect to a given polygon. 
+
+The predicates, specified by the `flags` parameter, are:
+0 = center
+1 = full
+2 = overlapping
+3 = overlapping bounding box
+
+@param polygon The polygon to fill with H3 cells.
+@param res The H3 resolution of the output cells.
+@param flags Experimental flags to modify the behavior of the function.
+@return The H3 indexes contained by the polygon, or an `H3ErrorCode` on failure.
+"""
+function polygonToCellsExperimental(polygon::Lib.GeoPolygon, res::Int, flags::UInt32)::Union{H3ErrorCode, Vector{H3Index}}
+	array_len = maxPolygonToCellsSizeExperimental(polygon, res, flags)
+	out = fill(H3Index(H3_NULL), array_len)
+
+	ret::H3Error =
+		Lib.polygonToCellsExperimental(Ref(polygon), res, flags, array_len, out)
+
+	_check_h3error(ret, filter(!=(H3_NULL), out))
+end
+
+function polygonToCellsExperimental(geoloop::Vector{LatLng},res::Int,flags::UInt32)::Union{H3ErrorCode, Vector{H3Index}}
+	GC.@preserve geoloop begin
+		loop = Lib.GeoLoop(length(geoloop), pointer(geoloop))
+		polygon = Lib.GeoPolygon(loop, 0, C_NULL)
+		polygonToCellsExperimental(polygon, res, flags)
+	end
+end
 
 # Unidirectional edge functions
 
